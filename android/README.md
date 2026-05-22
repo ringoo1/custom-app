@@ -10,12 +10,12 @@ from the command line with a configured Android SDK:
 
 ```bash
 cd android
-./gradlew :app:installDebug   # requires gradle wrapper; see below
+./gradlew :app:assembleDebug   # APK at app/build/outputs/apk/debug/app-debug.apk
+./gradlew :app:installDebug    # build + adb install in one go
 ```
 
-If there's no `gradlew` yet, generate one once with Android Studio
-("Sync Project with Gradle Files") or `gradle wrapper --gradle-version 8.7`
-from inside `android/`.
+The gradle wrapper is checked in, so no system gradle is required — just
+JDK 17 and an Android SDK with `ANDROID_HOME` (or `ANDROID_SDK_ROOT`) set.
 
 ## Wiring up the cert
 
@@ -38,6 +38,56 @@ Rebuild and install. Without this step every request will fail with a
 - **Physical device on your LAN**: regenerate the cert with your LAN IP
   (`python gen_cert.py --ip 192.168.1.5`), copy `cert.pem` over, and edit
   the URL field in the app to `https://192.168.1.5:4433`.
+
+### One-shot install for a USB-connected phone
+
+There's a helper that does the cert + build + adb install dance:
+
+```bash
+./scripts/install-to-device.sh 192.168.1.42   # your dev box's LAN IP
+```
+
+This regenerates `cert.pem` with that IP in the SAN list, copies it into
+`res/raw/server_cert.pem`, patches the default base URL in `strings.xml`,
+builds the debug APK, and runs `adb install -r`. Then start the server
+on the host:
+
+```bash
+cd server && .venv/bin/python server.py --host 0.0.0.0 --port 4433
+```
+
+Make sure UDP/4433 is open on the host firewall (e.g. `sudo ufw allow
+4433/udp` on Ubuntu) and that the phone is on the same WiFi as the dev
+box. **`adb reverse` cannot tunnel UDP**, so a USB-only setup will not
+work for QUIC — the phone must reach the host over IP.
+
+### Rooted-phone-specific notes
+
+Root isn't required to run this app or test HTTP/3 against the dev
+server — the cert is pinned in `network_security_config.xml` via the
+bundled `@raw/server_cert`, which works on stock Android.
+
+Root will matter for the **next** step (MITM proxy). On a rooted phone
+you can drop the proxy's CA into the system trust store so *every* app
+trusts it without modification:
+
+```bash
+# (later, once the proxy exists)
+HASH=$(openssl x509 -in proxy-ca.pem -inform pem -subject_hash_old -noout)
+adb push proxy-ca.pem /sdcard/${HASH}.0
+adb shell
+$ su
+# mount -o rw,remount /system            # or use magisk's modules dir
+# mv /sdcard/${HASH}.0 /system/etc/security/cacerts/
+# chmod 644 /system/etc/security/cacerts/${HASH}.0
+# reboot
+```
+
+On Android 14+ the `cacerts` dir is on the APEX-mounted
+`com.android.conscrypt` module — Magisk's "Move Certificates" or
+"AlwaysTrustUserCerts" modules are the cleanest path there. For *this*
+app we don't need any of that, because the debug network config already
+allows user-installed CAs.
 
 ## Confirming H3 was used
 
