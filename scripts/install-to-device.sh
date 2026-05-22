@@ -47,6 +47,10 @@ echo "==> regenerating cert with SAN ${HOST_IP}"
 
 echo "==> copying cert into android resources"
 cp cert.pem "$ANDROID_DIR/app/src/main/res/raw/server_cert.pem"
+if grep -q PLACEHOLDER "$ANDROID_DIR/app/src/main/res/raw/server_cert.pem"; then
+  echo "ERROR: cert copy failed; resource still contains placeholder content" >&2
+  exit 1
+fi
 
 echo "==> patching default base URL to https://${HOST_IP}:4433"
 # Only touch the dev default; the user can still override at runtime.

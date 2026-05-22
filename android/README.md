@@ -22,14 +22,21 @@ JDK 17 and an Android SDK with `ANDROID_HOME` (or `ANDROID_SDK_ROOT`) set.
 The app pins to the server's self-signed cert via
 `res/xml/network_security_config.xml`, which references `@raw/server_cert`.
 
-After running `python server/gen_cert.py`:
+A throwaway placeholder ships at `app/src/main/res/raw/server_cert.pem`
+so the build always compiles. **Before you actually talk to the server**
+you must overwrite it with the real cert:
 
 ```bash
+python server/gen_cert.py
 cp server/cert.pem android/app/src/main/res/raw/server_cert.pem
 ```
 
 Rebuild and install. Without this step every request will fail with a
-`CertPathValidatorException`.
+`CertPathValidatorException` because the placeholder cert is not the
+one the server presents.
+
+The `scripts/install-to-device.sh` helper does all of this in one shot
+and refuses to build if the placeholder is still in place.
 
 ## Pointing at the server
 

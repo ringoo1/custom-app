@@ -1,8 +1,0 @@
-After running `python server/gen_cert.py`, copy the resulting cert.pem to
-this directory as `server_cert.pem`:
-
-    cp server/cert.pem android/app/src/main/res/raw/server_cert.pem
-
-The cert.pem must be PEM-encoded (BEGIN CERTIFICATE ... END CERTIFICATE).
-Rebuild the app after replacing it. You can delete this placeholder file
-once the real cert is in place.
