@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+
+    <!-- The bundled cert (res/raw/server_cert.pem) is the only trust anchor
+         for our test domains. Add IPs / hostnames here as needed. -->
+    <domain-config>
+        <domain includeSubdomains="true">h3.local</domain>
+        <domain includeSubdomains="true">10.0.2.2</domain>
+        <domain includeSubdomains="true">127.0.0.1</domain>
+        <trust-anchors>
+            <certificates src="@raw/server_cert" />
+        </trust-anchors>
+    </domain-config>
+
+    <!-- Everything else uses only the system trust store. -->
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+
+    <!-- For `./gradlew :app:assembleDebug` builds: also trust user-installed
+         CAs. This is what lets the future MITM proxy's CA be picked up once
+         we add the proxy step. -->
+    <debug-overrides>
+        <trust-anchors>
+            <certificates src="user" />
+            <certificates src="system" />
+            <certificates src="@raw/server_cert" />
+        </trust-anchors>
+    </debug-overrides>
+
+</network-security-config>

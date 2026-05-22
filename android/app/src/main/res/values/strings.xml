@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">H3 Client</string>
+
+    <!-- 10.0.2.2 is the host machine when running on the Android emulator.
+         Override in res/values/strings.xml or via the URL field at runtime
+         when testing on a physical device. -->
+    <string name="default_base_url">https://10.0.2.2:4433</string>
+</resources>

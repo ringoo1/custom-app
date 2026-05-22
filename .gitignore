@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+.python-version
+
+# Server certs (regenerate locally; never commit private keys)
+server/cert.pem
+server/key.pem
+
+# Android cert copy (regenerated from server/cert.pem)
+android/app/src/main/res/raw/server_cert.pem
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
+*.swp
